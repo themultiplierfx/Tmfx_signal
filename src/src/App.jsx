@@ -1,30 +1,51 @@
-import { useState } from 'react'
+// src/App.jsx
+import { useState } from 'react';
+import { scanAllPairs } from './signals.js';
+import './App.css';
 
 function App() {
-  const [apiKey, setApiKey] = useState('')
+  const [signals, setSignals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const handleScan = async () => {
+    setLoading(true);
+    setSignals([]);
+    setProgress(0);
+    const results = await scanAllPairs(setProgress);
+    setSignals(results);
+    setLoading(false);
+  };
+
+  const getCardClass = (signal) => {
+    if (signal === "STRONG BUY") return "card strong-buy";
+    if (signal === "BUY") return "card buy";
+    if (signal === "STRONG SELL") return "card strong-sell";
+    if (signal === "SELL") return "card sell";
+    return "card";
+  };
 
   return (
-    <div style={{maxWidth: '900px', margin: '0 auto'}}>
-      <h1>TMFX Signal Box</h1>
-      <p>Forex Signals with Magic Fibo + 5 Indicators</p>
+    <div className="container">
+      <h1>TMFX Signal Dashboard</h1>
+      <button className="scan-btn" onClick={handleScan} disabled={loading}>
+        {loading ? `Scanning... ${progress}%` : "Scan All 38 Pairs"}
+      </button>
       
-      <div style={{background: '#1a1a1a', padding: '15px', borderRadius: '8px', marginTop: '20px'}}>
-        <label><b>Enter Your TwelveData API Key:</b></label>
-        <input 
-          type="password" 
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Paste your API key here"
-          style={{width: '100%', padding: '10px', marginTop: '8px', background: '#0a0a0a', color: '#fff', border: '1px solid #333'}}
-        />
-        <p style={{fontSize: '12px', color: '#888'}}>Your key is only used in your browser. Not saved to Github.</p>
-      </div>
+      {loading && <p className="progress">Scanning pairs... Please wait</p>}
 
-      <div style={{marginTop: '20px'}}>
-        <p>Status: Waiting for API key...</p>
+      <div className="grid">
+        {signals.map((s) => (
+          <div key={s.pair} className={getCardClass(s.signal)}>
+            <div className="pair">{s.pair}</div>
+            <div className="signal">{s.signal}</div>
+            <div className="price">${s.price.toFixed(5)}</div>
+            <div className="score">Score: {s.score}</div>
+          </div>
+        ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
